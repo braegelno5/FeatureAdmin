@@ -1,6 +1,4 @@
-﻿using System;
-using Microsoft.SharePoint;
-using Microsoft.SharePoint.Administration;
+﻿using Microsoft.SharePoint.Administration;
 
 namespace FeatureAdmin
 {

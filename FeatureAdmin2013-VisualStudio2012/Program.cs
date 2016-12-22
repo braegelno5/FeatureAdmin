@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
 using Microsoft.SharePoint.Administration;
-using Microsoft.SharePoint;
 
 // Codeplex Project http://FeatureAdmin.codeplex.com
 // Started by Achim Ismaili in September 2009 - email: achim@ismaili.de

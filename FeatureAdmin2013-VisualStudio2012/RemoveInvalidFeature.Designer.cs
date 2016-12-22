@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RemoveInvalidFeature));
             this.radioScopeWeb = new System.Windows.Forms.RadioButton();
             this.radioScopeSite = new System.Windows.Forms.RadioButton();
             this.radioScopeWebApp = new System.Windows.Forms.RadioButton();
@@ -144,7 +145,7 @@
             this.btnScopeCancel.UseVisualStyleBackColor = true;
             this.btnScopeCancel.Click += new System.EventHandler(this.btnScopeCancel_Click);
             // 
-            // FeatureScope
+            // RemoveInvalidFeature
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -155,7 +156,8 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.grpFeatureScope);
-            this.Name = "FeatureScope";
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Name = "RemoveInvalidFeature";
             this.Text = "FeatureScope";
             this.grpFeatureScope.ResumeLayout(false);
             this.grpFeatureScope.PerformLayout();

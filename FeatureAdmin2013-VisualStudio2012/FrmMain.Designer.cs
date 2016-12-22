@@ -26,6 +26,7 @@ namespace FeatureAdmin
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmMain));
             this.txtResult = new System.Windows.Forms.TextBox();
             this.lblSPSiteFeatures = new System.Windows.Forms.Label();
             this.clbSPSiteFeatures = new System.Windows.Forms.CheckedListBox();
@@ -634,6 +635,7 @@ namespace FeatureAdmin
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(892, 730);
             this.Controls.Add(this.splitContainerCompleteMainframe);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FrmMain";
             this.Text = "FeatureAdmin for SharePoint 2013 - v2.3";
             this.Load += new System.EventHandler(this.FrmMain_Load);

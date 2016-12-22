@@ -28,12 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LocationForm));
             this.MainSplitContainer = new System.Windows.Forms.SplitContainer();
             this.FeatureTitlePanel = new System.Windows.Forms.Panel();
             this.FeaturePanelCaption = new System.Windows.Forms.Label();
             this.LocationGrid = new System.Windows.Forms.DataGridView();
-            this.DeactivateButton = new System.Windows.Forms.Button();
             this.LocationDetailsView = new System.Windows.Forms.ListView();
+            this.DeactivateButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.MainSplitContainer)).BeginInit();
             this.MainSplitContainer.Panel1.SuspendLayout();
             this.MainSplitContainer.Panel2.SuspendLayout();
@@ -92,15 +93,6 @@
             this.LocationGrid.Size = new System.Drawing.Size(1025, 500);
             this.LocationGrid.TabIndex = 2;
             // 
-            // DeactivateButton
-            // 
-            this.DeactivateButton.Location = new System.Drawing.Point(184, 3);
-            this.DeactivateButton.Name = "DeactivateButton";
-            this.DeactivateButton.Size = new System.Drawing.Size(200, 23);
-            this.DeactivateButton.TabIndex = 0;
-            this.DeactivateButton.Text = "Deactivate Selected Activations";
-            this.DeactivateButton.UseVisualStyleBackColor = true;
-            // 
             // LocationDetailsView
             // 
             this.LocationDetailsView.Location = new System.Drawing.Point(4, 32);
@@ -110,12 +102,22 @@
             this.LocationDetailsView.UseCompatibleStateImageBehavior = false;
             this.LocationDetailsView.View = System.Windows.Forms.View.Details;
             // 
+            // DeactivateButton
+            // 
+            this.DeactivateButton.Location = new System.Drawing.Point(184, 3);
+            this.DeactivateButton.Name = "DeactivateButton";
+            this.DeactivateButton.Size = new System.Drawing.Size(200, 23);
+            this.DeactivateButton.TabIndex = 0;
+            this.DeactivateButton.Text = "Deactivate Selected Activations";
+            this.DeactivateButton.UseVisualStyleBackColor = true;
+            // 
             // LocationForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(539, 503);
             this.Controls.Add(this.MainSplitContainer);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "LocationForm";
             this.Text = "LocationForm";
             this.MainSplitContainer.Panel1.ResumeLayout(false);

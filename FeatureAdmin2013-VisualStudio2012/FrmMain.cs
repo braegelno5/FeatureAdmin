@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
@@ -9,7 +7,6 @@ using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
 using System.Data.SqlClient;
 using CursorUtil;
-using Be.Timvw.Framework.Collections.Generic;
 using Be.Timvw.Framework.ComponentModel;
 
 namespace FeatureAdmin
