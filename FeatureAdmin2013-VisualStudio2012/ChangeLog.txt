@@ -2,6 +2,10 @@ FeatureAdmin2013 ChangeLog
   - this file is intended for developers
   - chronological; newest info at bottom
 
+Dec, 2016 -TSC
+added transactions on feature removing, so we are able to handle it more granularly
+for example removing at first a list then the ct then the field and after this the feature
+
 Feb, 2013 - Perry
 Trapped & logged Access Denied exceptions in Find Faulty Feature (so it doesn't crash)
 Fix Find Activated Feature to correctly find web application scoped features

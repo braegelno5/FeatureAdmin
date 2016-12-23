@@ -9,7 +9,7 @@
         #elif (SP2013)
             public static string SharePointVersion = "2013";
         #else
-            public static string SharePointVersion = "????";
+            public static string SharePointVersion = "2016";
         #endif
     }
 }

@@ -8,6 +8,7 @@ using Microsoft.SharePoint.Administration;
 using System.Data.SqlClient;
 using CursorUtil;
 using Be.Timvw.Framework.ComponentModel;
+using System.Transactions;
 
 namespace FeatureAdmin
 {
@@ -21,7 +22,7 @@ namespace FeatureAdmin
 
         // defines, how the format of the log time
         public static string DATETIMEFORMAT = "yyyy/MM/dd HH:mm:ss";
-        // prefix for log entries: Environment.NewLine + DateTime.Now.ToString(DATETIMEFORMAT) + " - "; 
+        // prefix for log entries: Environment.NewLine + DateTime.Now.ToString(DATETIMEFORMAT) + " - ";
 
         private FeatureDatabase m_featureDb = new FeatureDatabase();
         private Location m_CurrentWebAppLocation;
@@ -747,24 +748,32 @@ namespace FeatureAdmin
         {
             int removedFeatures = 0;
             int scannedThrough = 0;
-            SPSecurity.RunWithElevatedPrivileges(delegate()
+            SPSecurity.RunWithElevatedPrivileges(delegate ()
             {
-
                 foreach (SPWeb web in site.AllWebs)
                 {
                     try
                     {
-                        //forcefully remove the feature
-                        if (web.Features[featureID].DefinitionId != null)
+                        // Create the TransactionScope to execute the commands, guaranteeing
+                        // that both commands can commit or roll back as a single unit of work.
+                        using (TransactionScope scope = new TransactionScope())
                         {
-                            bool force = true;
-                            web.Features.Remove(featureID, force);
-                            removedFeatures++;
-                            logDateMsg(
-                                string.Format("Success removing feature {0} from {1}",
-                                featureID,
-                                LocationInfo.SafeDescribeObject(web)));
+                            //forcefully remove the feature
+                            if (web.Features[featureID].DefinitionId != null)
+                            {
+                                bool force = true;
+                                web.Features.Remove(featureID, force);
+                                removedFeatures++;
+                                logDateMsg(
+                                    string.Format("Success removing feature {0} from {1}",
+                                    featureID,
+                                    LocationInfo.SafeDescribeObject(web)));
 
+                            }
+
+                            // The Complete method commits the transaction. If an exception has been thrown,
+                            // Complete is not  called and the transaction is rolled back.
+                            scope.Complete();
                         }
                     }
                     catch (Exception exc)
@@ -803,11 +812,15 @@ namespace FeatureAdmin
             msgString = "Removing Feature '" + featureID.ToString() + "' from Web Application: '" + webApp.Name.ToString() + "'.";
             logDateMsg(" WebApp - " + msgString);
 
-            SPSecurity.RunWithElevatedPrivileges(delegate()
+            SPSecurity.RunWithElevatedPrivileges(delegate ()
+            {
+                if (featureScope == SPFeatureScope.WebApplication)
                 {
-                    if (featureScope == SPFeatureScope.WebApplication)
+                    try
                     {
-                        try
+                        // Create the TransactionScope to execute the commands, guaranteeing
+                        // that both commands can commit or roll back as a single unit of work.
+                        using (TransactionScope scope = new TransactionScope())
                         {
                             webApp.Features.Remove(featureID, true);
                             removedFeatures++;
@@ -815,29 +828,38 @@ namespace FeatureAdmin
                                 string.Format("Success removing feature {0} from {1}",
                                 featureID,
                                 LocationInfo.SafeDescribeObject(webApp)));
-                        }
-                        catch (Exception exc)
-                        {
-                            logException(exc,
-                                string.Format("Exception removing feature {0} from {1}",
-                                featureID,
-                                LocationInfo.SafeDescribeObject(webApp)));
+
+                            // The Complete method commits the transaction. If an exception has been thrown,
+                            // Complete is not  called and the transaction is rolled back.
+                            scope.Complete();
                         }
                     }
-                    else
+                    catch (Exception exc)
                     {
+                        logException(exc,
+                            string.Format("Exception removing feature {0} from {1}",
+                            featureID,
+                            LocationInfo.SafeDescribeObject(webApp)));
+                    }
+                }
+                else
+                {
 
-                        foreach (SPSite site in webApp.Sites)
+                    foreach (SPSite site in webApp.Sites)
+                    {
+                        using (site)
                         {
-                            using (site)
+                            if (featureScope == SPFeatureScope.Web)
                             {
-                                if (featureScope == SPFeatureScope.Web)
+                                removedFeatures += removeWebFeaturesWithinSiteCollection(site, featureID);
+                            }
+                            else
+                            {
+                                try
                                 {
-                                    removedFeatures += removeWebFeaturesWithinSiteCollection(site, featureID);
-                                }
-                                else
-                                {
-                                    try
+                                    // Create the TransactionScope to execute the commands, guaranteeing
+                                    // that both commands can commit or roll back as a single unit of work.
+                                    using (TransactionScope scope = new TransactionScope())
                                     {
                                         //forcefully remove the feature
                                         site.Features.Remove(featureID, true);
@@ -846,22 +868,27 @@ namespace FeatureAdmin
                                             string.Format("Success removing feature {0} from {1}",
                                             featureID,
                                             LocationInfo.SafeDescribeObject(site)));
-                                    }
-                                    catch (Exception exc)
-                                    {
-                                        logException(exc,
-                                            string.Format("Exception removing feature {0} from {1}",
-                                            featureID,
-                                            LocationInfo.SafeDescribeObject(site)));
-                                    }
 
+                                        // The Complete method commits the transaction. If an exception has been thrown,
+                                        // Complete is not  called and the transaction is rolled back.
+                                        scope.Complete();
+                                    }
                                 }
-                                scannedThrough++;
+                                catch (Exception exc)
+                                {
+                                    logException(exc,
+                                        string.Format("Exception removing feature {0} from {1}",
+                                        featureID,
+                                        LocationInfo.SafeDescribeObject(site)));
+                                }
+
                             }
+                            scannedThrough++;
                         }
                     }
+                }
 
-                });
+            });
             msgString = removedFeatures + " Features removed in the Web Application. " + scannedThrough + " SiteCollections were scanned.";
             logDateMsg(" WebApp - " + msgString);
 
@@ -878,7 +905,7 @@ namespace FeatureAdmin
             int scannedThrough = 0;
             string msgString;
 
-            SPSecurity.RunWithElevatedPrivileges(delegate()
+            SPSecurity.RunWithElevatedPrivileges(delegate ()
             {
                 msgString = "Removing Feature '" + featureID.ToString() + ", Scope: " + featureScope.ToString() + "' from the Farm.";
                 logDateMsg("Farm - " + msgString);
@@ -886,12 +913,21 @@ namespace FeatureAdmin
                 {
                     try
                     {
-                        SPWebService.ContentService.Features.Remove(featureID, true);
-                        removedFeatures++;
-                        logDateMsg(
-                            string.Format("Success removing feature {0} from {1}",
-                            featureID,
-                            LocationInfo.SafeDescribeObject(SPFarm.Local)));
+                        // Create the TransactionScope to execute the commands, guaranteeing
+                        // that both commands can commit or roll back as a single unit of work.
+                        using (TransactionScope scope = new TransactionScope())
+                        {
+                            SPWebService.ContentService.Features.Remove(featureID, true);
+                            removedFeatures++;
+                            logDateMsg(
+                                string.Format("Success removing feature {0} from {1}",
+                                featureID,
+                                LocationInfo.SafeDescribeObject(SPFarm.Local)));
+
+                            // The Complete method commits the transaction. If an exception has been thrown,
+                            // Complete is not  called and the transaction is rolled back.
+                            scope.Complete();
+                        }
                     }
                     catch (Exception exc)
                     {
@@ -906,7 +942,7 @@ namespace FeatureAdmin
                 else
                 {
 
-                    // all the content & admin WebApplications 
+                    // all the content & admin WebApplications
                     SPWebApplicationCollection webApplicationCollection = GetAllWebApps();
 
                     foreach (SPWebApplication webApplication in webApplicationCollection)
@@ -1015,7 +1051,7 @@ namespace FeatureAdmin
                         string msgString = DescribeFeatureAndLocation(feature);
                         logDateMsg(msgString);
                         string caption = string.Format("Found Faulty {0} Feature", scope);
-                        DialogResult response = MessageBox.Show(msgString, caption, 
+                        DialogResult response = MessageBox.Show(msgString, caption,
                             MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
                         if (response == DialogResult.Yes)
                         {
@@ -1034,7 +1070,7 @@ namespace FeatureAdmin
                 {
                     string msgstring = string.Format("Cannot access a feature collection of scope '{0}'! Not enough access rights for a content DB on SQL Server! dbOwner rights are recommended. Please read the following error message:\n\n'{1}'", scope.ToString(), ex.ToString());
                     string MessageCaption = string.Format("FeatureCollection in a Content DB not accessible");
-                    if(MessageBox.Show(msgstring, MessageCaption,MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    if (MessageBox.Show(msgstring, MessageCaption, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     {
                         return faultyFound;
                     }
@@ -1080,15 +1116,21 @@ namespace FeatureAdmin
                     SPSolution solution = SPFarm.Local.Solutions[feature.Definition.SolutionId];
                     if (solution != null)
                     {
-                        try {
+                        try
+                        {
                             text += string.Format(", SolutionName='{0}'", solution.Name);
-                        } catch { }
-                        try {
+                        }
+                        catch { }
+                        try
+                        {
                             text += string.Format(", SolutionDisplayName='{0}'", solution.DisplayName);
-                        } catch { }
-                        try {
+                        }
+                        catch { }
+                        try
+                        {
                             text += string.Format(", SolutionDeploymentState='{0}'", solution.DeploymentState);
-                        } catch { }
+                        }
+                        catch { }
                     }
                 }
             }
@@ -1199,7 +1241,7 @@ namespace FeatureAdmin
                 if (SPWebService.ContentService == null)
                 {
                     listWebApplications.Items.Add("SPWebService.ContentService == null! Access error?");
-                    }
+                }
                 if (SPWebService.AdministrationService == null)
                 {
                     listWebApplications.Items.Add("SPWebService.AdministrationService == null! Access error?");
@@ -1430,7 +1472,7 @@ namespace FeatureAdmin
             Feature feature = (Feature)selectedFeatures[0];
 
             ActivationFinder finder = new ActivationFinder();
-            finder.FoundListeners += delegate(Guid featureId, string url, string name)
+            finder.FoundListeners += delegate (Guid featureId, string url, string name)
             {
                 string msgtext = url + " = " + name;
                 if (url == name) { msgtext = url; } // farm, farm
